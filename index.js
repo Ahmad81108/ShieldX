@@ -19,12 +19,19 @@ if (!serviceAccount) {
   console.error("Missing FIREBASE_SERVICE_ACCOUNT");
 }
 
-admin.initializeApp({
+// 🔴 ONLY THIS PART IS UPDATED (no other functions touched)
+const firebaseConfig = {
   credential: serviceAccount
     ? admin.credential.cert(serviceAccount)
     : admin.credential.applicationDefault(),
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
-});
+};
+
+if (process.env.FIREBASE_DATABASE_URL) {
+  firebaseConfig.databaseURL = process.env.FIREBASE_DATABASE_URL;
+}
+
+admin.initializeApp(firebaseConfig);
+// 🔴 END OF UPDATE
 
 async function verifyAuth(req) {
   const auth = req.headers.authorization || "";
@@ -58,7 +65,6 @@ app.post("/notify", async (req, res) => {
     return res.status(400).json({ error: "missing fields" });
   }
 
-  // Prevent spoofing: senderId must match the authenticated user
   if (decoded.uid !== senderId) {
     return res.status(403).json({ error: "sender mismatch" });
   }
